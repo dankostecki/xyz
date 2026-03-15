@@ -756,10 +756,13 @@
               await navigator.share({ files: [file], title: 'Hyperliquid Terminal' });
               return;
             }
-          } catch (e) { /* fallback to download */ }
+          } catch (e) {
+            // User cancelled share — do NOT fallback to download
+            if (e.name === 'AbortError') return;
+          }
         }
 
-        // Download fallback
+        // Download fallback (only if Share API not available)
         const a = document.createElement('a');
         a.href = dataUrl;
         a.download = filename;
