@@ -796,7 +796,7 @@
         layout: {
           background: { type: 'solid', color: '#0d0d0d' },
           textColor: '#888',
-          fontFamily: "'Fira Code', monospace",
+          fontFamily: "'Share Tech Mono', monospace",
           fontSize: 11,
         },
         grid: {
@@ -867,6 +867,10 @@
       document.getElementById('chart-symbol').textContent = inst.label;
       const s = state[inst.id] || {};
       document.getElementById('chart-price').textContent = s.price != null ? fmt(s.price, inst.decimals) : '—';
+
+      candleSeries.applyOptions({
+        priceFormat: { type: 'price', precision: inst.decimals, minMove: Math.pow(10, -inst.decimals) },
+      });
 
       try {
         const data = await fetchChartCandles(inst, interval);
