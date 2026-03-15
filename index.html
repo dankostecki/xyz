@@ -301,10 +301,38 @@
 
       // Update prices in state
       for (const inst of INSTRUMENTS) {
-        const src = inst.dex === '' ? midsData.main : inst.dex === 'xyz' ? midsData.xyz : midsData.cash;
-        const raw = src[inst.id];
         if (!state[inst.id]) state[inst.id] = {};
+        let raw = null;
+
+        if (inst.dex === '') {
+          // Main dex: key is bare ticker
+          raw = midsData.main[inst.id];
+        } else {
+          // HIP-3 dex: try multiple key formats
+          const src = inst.dex === 'xyz' ? midsData.xyz : midsData.cash;
+          raw = src[inst.id]                          // bare: "CL"
+            ?? src[`${inst.dex}:${inst.id}`]          // prefixed: "xyz:CL"
+            ?? src[inst.id.toUpperCase()]              // uppercase variant
+            ?? null;
+
+          // Fallback: search other dex if not found
+          if (raw == null) {
+            const other = inst.dex === 'xyz' ? midsData.cash : midsData.xyz;
+            raw = other[inst.id] ?? other[`${inst.dex === 'xyz' ? 'cash' : 'xyz'}:${inst.id}`] ?? null;
+          }
+        }
+
         state[inst.id].price = raw != null ? parseFloat(raw) : null;
+      }
+
+      // Debug: log first fetch to help diagnose missing data
+      if (!fetchAllMids._logged) {
+        fetchAllMids._logged = true;
+        console.log('allMids main keys:', Object.keys(midsData.main).slice(0, 10));
+        console.log('allMids xyz keys:', Object.keys(midsData.xyz).slice(0, 20));
+        console.log('allMids cash keys:', Object.keys(midsData.cash).slice(0, 20));
+        console.log('allMids xyz sample:', JSON.stringify(midsData.xyz).slice(0, 300));
+        console.log('allMids cash sample:', JSON.stringify(midsData.cash).slice(0, 300));
       }
     }
 
@@ -325,6 +353,10 @@
           if (!state[inst.id]) state[inst.id] = {};
           state[inst.id].dayOpen = parseFloat(last.o);
           state[inst.id].dayHigh = parseFloat(last.h);
+          // Use candle close as price fallback if allMids didn't return data
+          if (state[inst.id].price == null) {
+            state[inst.id].price = parseFloat(last.c);
+          }
         }
       } catch (e) {
         console.error(`candle error ${inst.id}:`, e);
@@ -369,6 +401,15 @@
           if (!state[inst.id]) state[inst.id] = {};
           state[inst.id].wkdHigh = wkdHigh;
           state[inst.id].wkdLow = wkdLow;
+          // Use latest candle close as price fallback if allMids didn't return data
+          const lastCandle = candles[candles.length - 1];
+          if (state[inst.id].price == null && lastCandle) {
+            state[inst.id].price = parseFloat(lastCandle.c);
+          }
+          // Use first candle open as dayOpen fallback for change calculation
+          if (state[inst.id].dayOpen == null && candles[0]) {
+            state[inst.id].dayOpen = parseFloat(candles[0].o);
+          }
         }
       } catch (e) {
         console.error(`weekend range error ${inst.id}:`, e);
