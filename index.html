@@ -651,7 +651,7 @@
       document.getElementById('weekend-badge').classList.toggle('visible', weekend);
 
       // Build header row
-      let cols = '<th>INSTRUMENT</th><th>PRICE</th><th>CHG 24H</th><th>CHG %</th>';
+      let cols = '<th>INSTRUMENT</th><th>PRICE</th><th>CHG %</th>';
       if (weekend) {
         cols += '<th>WKD LOW</th><th>WKD HIGH</th>';
       } else {
@@ -663,7 +663,7 @@
     function renderTable() {
       const weekend = isWeekend();
       const tbody = document.getElementById('tbody');
-      const colCount = weekend ? 6 : 5;
+      const colCount = weekend ? 5 : 4;
       let html = '';
 
       for (const cat of CATEGORIES) {
@@ -682,7 +682,6 @@
           html += `<tr class="data-row" data-inst-id="${inst.id}">`;
           html += `<td class="instrument-name">${inst.label}</td>`;
           html += `<td>${price != null ? fmt(price, inst.decimals) : '<span class="na">N/A</span>'}</td>`;
-          html += `<td class="${changeClass(chg)}">${fmtChange(chg, inst.decimals)}</td>`;
           html += `<td class="${changeClass(chgPct)}">${fmtPct(chgPct)}</td>`;
 
           if (weekend) {
