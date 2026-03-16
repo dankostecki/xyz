@@ -574,6 +574,7 @@
           if (!state[inst.id]) state[inst.id] = {};
           state[inst.id].dayOpen = parseFloat(last.o);
           state[inst.id].dayHigh = parseFloat(last.h);
+          state[inst.id].dayLow = parseFloat(last.l);
           // Use candle close as price fallback if allMids didn't return data
           if (state[inst.id].price == null) {
             state[inst.id].price = parseFloat(last.c);
@@ -698,7 +699,7 @@
       if (weekend) {
         cols += '<th>WKD LOW</th><th>WKD HIGH</th>';
       } else {
-        cols += '<th>DAY HIGH</th>';
+        cols += '<th>DAY LOW</th><th>DAY HIGH</th>';
       }
       thead.innerHTML = '<tr>' + cols + '</tr>';
     }
@@ -706,7 +707,7 @@
     function renderTable() {
       const weekend = isWeekend();
       const tbody = document.getElementById('tbody');
-      const colCount = weekend ? 5 : 4;
+      const colCount = 5;
       let html = '';
 
       for (const cat of CATEGORIES) {
@@ -731,6 +732,7 @@
             html += `<td>${s.wkdLow != null ? fmt(s.wkdLow, inst.decimals) : '<span class="na">—</span>'}</td>`;
             html += `<td>${s.wkdHigh != null ? fmt(s.wkdHigh, inst.decimals) : '<span class="na">—</span>'}</td>`;
           } else {
+            html += `<td>${s.dayLow != null ? fmt(s.dayLow, inst.decimals) : '<span class="na">—</span>'}</td>`;
             html += `<td>${s.dayHigh != null ? fmt(s.dayHigh, inst.decimals) : '<span class="na">—</span>'}</td>`;
           }
 
