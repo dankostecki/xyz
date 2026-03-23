@@ -197,11 +197,22 @@
     .tab-content.active { display: block; }
     #tab-news {
       height: calc(100vh - 90px);
+      overflow-x: auto;
     }
     #news-frame {
       width: 100%;
       height: 100%;
       border: none;
+    }
+
+    /* Desktop: widen container for NEWS tab */
+    @media (min-width: 768px) {
+      #terminal-container.news-active {
+        max-width: 1400px;
+      }
+      #terminal-container.news-active #news-frame {
+        min-width: 1200px;
+      }
     }
 
     /* Footer */
@@ -783,6 +794,7 @@
       const tab = btn.dataset.tab;
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
       document.querySelectorAll('.tab-content').forEach(tc => tc.classList.toggle('active', tc.id === 'tab-' + tab));
+      document.getElementById('terminal-container').classList.toggle('news-active', tab === 'news');
       document.getElementById('screenshot-btn').style.display = tab === 'market' ? '' : 'none';
     });
 
