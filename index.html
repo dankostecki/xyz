@@ -170,33 +170,54 @@
       font-weight: 600;
     }
 
-    /* Tabs */
+    /* Tabs: bordered tiles in the header, next to the title */
+    .title-short { display: none; }
+    .capture .tab-bar { display: none !important; }
+    .capture .title-full, .capture .live-label { display: inline !important; }
+    .capture .ts-extra, .capture .wkd-text { display: inline !important; }
+    .capture .title-short { display: none !important; }
+    .capture .header, .capture .header-right { flex-wrap: wrap !important; }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
     .tab-bar {
       display: flex;
-      gap: 0;
-      border-bottom: 1px solid var(--border);
+      gap: 6px;
     }
     .tab-btn {
-      background: none;
-      border: none;
+      background: transparent;
+      border: 1px solid #333;
+      border-radius: 2px;
       color: var(--dim);
       font-family: inherit;
       font-size: 12px;
       letter-spacing: 1.5px;
-      padding: 8px 18px;
+      padding: 5px 12px;
+      min-height: 30px;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
-    .tab-btn:hover { color: var(--fg); }
+    .tab-btn:hover { color: var(--fg); border-color: #555; }
     .tab-btn.active {
       color: var(--amber);
-      border-bottom-color: var(--amber);
+      border-color: rgba(255, 153, 0, 0.55);
+      background: rgba(255, 153, 0, 0.10);
     }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+    /* NEWS fills whatever is left below the header (no hard-coded header height) */
+    body.news-active #terminal-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100dvh - 16px);
+    }
     #tab-news {
-      height: calc(100vh - 90px);
+      flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
     #news-frame {
@@ -213,11 +234,8 @@
       }
       body.news-active #terminal-container {
         max-width: 100%;
-        height: 100vh;
+        height: 100dvh;
         border: none;
-      }
-      body.news-active #tab-news {
-        height: calc(100vh - 90px);
       }
     }
 
@@ -417,6 +435,13 @@
       thead th, tbody td { padding: 6px 8px; }
       .header { padding: 8px 10px; }
       .header-title { font-size: 12px; }
+      /* One row on phones: short title, tabs, live dot + time */
+      .header { flex-wrap: nowrap; gap: 8px; }
+      .header-left { gap: 8px; flex-wrap: nowrap; }
+      .header-right { gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
+      .title-full, .live-label, .ts-extra, .wkd-text { display: none; }
+      .title-short { display: inline; white-space: nowrap; }
+      .tab-btn { padding: 6px 10px; min-height: 34px; }
       .chart-sheet { height: 75vh; }
       .chart-intervals button { padding: 6px 8px; font-size: 11px; min-width: 32px; }
     }
@@ -430,16 +455,18 @@
 <body>
   <div id="terminal-container">
     <div class="header">
-      <span class="header-title">HYPERLIQUID TRADFI TERMINAL</span>
+      <div class="header-left">
+        <span class="header-title"><span class="title-full">HYPERLIQUID TRADFI TERMINAL</span><span class="title-short">HL TRADFI</span></span>
+        <div class="tab-bar" role="tablist">
+          <button class="tab-btn active" data-tab="market" role="tab">MARKET</button>
+          <button class="tab-btn" data-tab="news" role="tab">NEWS</button>
+        </div>
+      </div>
       <div class="header-right">
         <span><span class="live-dot" id="live-dot"></span> <span class="live-label" id="live-label">LIVE</span></span>
         <span class="timestamp" id="timestamp"></span>
-        <span class="weekend-badge" id="weekend-badge">⚠ WEEKEND</span>
+        <span class="weekend-badge" id="weekend-badge">⚠<span class="wkd-text"> WEEKEND</span></span>
       </div>
-    </div>
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="market">MARKET</button>
-      <button class="tab-btn" data-tab="news">NEWS</button>
     </div>
     <div id="tab-market" class="tab-content active">
       <div class="table-wrapper">
@@ -783,7 +810,7 @@
       const hh = String(now.getUTCHours()).padStart(2, '0');
       const mm = String(now.getUTCMinutes()).padStart(2, '0');
       const ss = String(now.getUTCSeconds()).padStart(2, '0');
-      document.getElementById('timestamp').textContent = `${day} ${hh}:${mm}:${ss} UTC`;
+      document.getElementById('timestamp').innerHTML = `<span class="ts-extra">${day} </span>${hh}:${mm}:${ss}<span class="ts-extra"> UTC</span>`;
 
       // Check online/offline
       const elapsed = Date.now() - lastSuccessfulFetch;
@@ -829,6 +856,8 @@
         const canvas = await html2canvas(container, {
           backgroundColor: '#0a0a0a',
           scale: 2,
+          // Shared image: full title and date, no tab buttons, even on phones
+          onclone: (doc) => doc.getElementById('terminal-container').classList.add('capture'),
         });
         const dataUrl = canvas.toDataURL('image/png');
         const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
